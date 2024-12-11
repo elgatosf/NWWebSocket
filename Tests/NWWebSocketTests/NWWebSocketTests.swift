@@ -121,18 +121,17 @@ class NWWebSocketTests: XCTestCase {
 // MARK: - WebSocketConnectionDelegate conformance
 
 extension NWWebSocketTests: WebSocketConnectionDelegate {
-
     func webSocketDidConnect(connection: WebSocketConnection) {
         Self.connectExpectation?.fulfill()
 
         if Self.shouldDisconnectImmediately {
-            Self.socket.disconnect()
+            Self.socket.disconnect(closeCode: .goingAway)
         }
     }
 
     func webSocketDidDisconnect(connection: WebSocketConnection,
-                                closeCode: NWProtocolWebSocket.CloseCode, reason: Data?) {
-        Self.disconnectExpectation.fulfill()
+                                closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+        Self.disconnectExpectation?.fulfill()
     }
 
     func webSocketViabilityDidChange(connection: WebSocketConnection, isViable: Bool) {
@@ -141,11 +140,11 @@ extension NWWebSocketTests: WebSocketConnectionDelegate {
         }
     }
 
-    func webSocketDidAttemptBetterPathMigration(result: Result<WebSocketConnection, NWError>) {
+    func webSocketDidAttemptBetterPathMigration(result: Result<WebSocketConnection, Error>) {
         XCTFail("WebSocket should not attempt to migrate to a better path during testing.")
     }
 
-    func webSocketDidReceiveError(connection: WebSocketConnection, error: NWError) {
+    func webSocketDidReceiveError(connection: WebSocketConnection, error: Error) {
         Self.errorExpectation?.fulfill()
     }
 

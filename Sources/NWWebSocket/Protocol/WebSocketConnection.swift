@@ -1,5 +1,4 @@
 import Foundation
-import Network
 
 /// Defines a WebSocket connection.
 public protocol WebSocketConnection {
@@ -26,7 +25,7 @@ public protocol WebSocketConnection {
 
     /// Disconnect from the WebSocket.
     /// - Parameter closeCode: The code to use when closing the WebSocket connection.
-    func disconnect(closeCode: NWProtocolWebSocket.CloseCode)
+    func disconnect(closeCode: URLSessionWebSocketTask.CloseCode)
 
     /// The WebSocket connection delegate.
     var delegate: WebSocketConnectionDelegate? { get set }
@@ -41,10 +40,10 @@ public protocol WebSocketConnectionDelegate: AnyObject {
     /// Tells the delegate that the WebSocket did disconnect.
     /// - Parameters:
     ///   - connection: The `WebSocketConnection` that disconnected.
-    ///   - closeCode: A `NWProtocolWebSocket.CloseCode` describing how the connection closed.
+    ///   - closeCode: A `URLSessionWebSocketTask.CloseCode` describing how the connection closed.
     ///   - reason: Optional extra information explaining the disconnection. (Formatted as UTF-8 encoded `Data`).
     func webSocketDidDisconnect(connection: WebSocketConnection,
-                                closeCode: NWProtocolWebSocket.CloseCode,
+                                closeCode: URLSessionWebSocketTask.CloseCode,
                                 reason: Data?)
 
     /// Tells the delegate that the WebSocket connection viability has changed.
@@ -63,16 +62,16 @@ public protocol WebSocketConnectionDelegate: AnyObject {
     /// becomes available. This method will also be called if a device loses a Wi-Fi connection, and a cellular connection is available.
     /// - Parameter result: A `Result` containing the `WebSocketConnection` if the migration was successful, or a
     /// `NWError` if the migration failed for some reason.
-    func webSocketDidAttemptBetterPathMigration(result: Result<WebSocketConnection, NWError>)
+    func webSocketDidAttemptBetterPathMigration(result: Result<WebSocketConnection, Error>)
 
     /// Tells the delegate that the WebSocket received an error.
     ///
     /// An error received by a WebSocket is not necessarily fatal.
     /// - Parameters:
     ///   - connection: The `WebSocketConnection` that received an error.
-    ///   - error: The `NWError` that was received.
+    ///   - error: The `Error` that was received.
     func webSocketDidReceiveError(connection: WebSocketConnection,
-                                  error: NWError)
+                                  error: Error)
 
     /// Tells the delegate that the WebSocket received a 'pong' from the server.
     /// - Parameter connection: The active `WebSocketConnection`.
