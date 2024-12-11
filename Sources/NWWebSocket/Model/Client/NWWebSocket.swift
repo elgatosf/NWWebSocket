@@ -143,7 +143,7 @@ open class NWWebSocket: WebSocketConnection {
 
     /// Disconnect from the WebSocket.
     /// - Parameter closeCode: The code to use when closing the WebSocket connection.
-    open func disconnect(closeCode: URLSessionWebSocketTask.CloseCode) {
+    open func disconnect(closeCode: URLSessionWebSocketTask.CloseCode = .normalClosure) {
         isIntentionalDisconnection = true
         pingTimer?.invalidate()
         

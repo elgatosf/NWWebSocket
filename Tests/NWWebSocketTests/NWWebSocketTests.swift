@@ -125,7 +125,7 @@ extension NWWebSocketTests: WebSocketConnectionDelegate {
         Self.connectExpectation?.fulfill()
 
         if Self.shouldDisconnectImmediately {
-            Self.socket.disconnect(closeCode: .goingAway)
+            Self.socket.disconnect()
         }
     }
 
