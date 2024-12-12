@@ -20,6 +20,7 @@ open class NWWebSocket: WebSocketConnection {
     private var errorWhileWaitingCount = 0
     private let errorWhileWaitingLimit = 20
     private var disconnectionWorkItem: DispatchWorkItem?
+    private var activeListeners = Set<UUID>()
 
     // MARK: - Initialization
 
@@ -66,9 +67,16 @@ open class NWWebSocket: WebSocketConnection {
 
     /// Connect to the WebSocket.
     open func connect() {
+        guard !isConnected else { return }
+        
+        if webSocketTask != nil {
+            disconnect(closeCode: .normalClosure)
+        }
+        
         webSocketTask = session.webSocketTask(with: url)
         webSocketTask?.resume()
         isConnected = true
+        activeListeners.removeAll()
         delegate?.webSocketDidConnect(connection: self)
         listen()
     }
@@ -97,8 +105,15 @@ open class NWWebSocket: WebSocketConnection {
 
     /// Start listening for messages over the WebSocket.
     public func listen() {
+        guard isConnected else { return }
+        
+        let listenerId = UUID()
+        activeListeners.insert(listenerId)
+        
         webSocketTask?.receive { [weak self] result in
-            guard let self = self else { return }
+            guard let self = self,
+                  self.isConnected,
+                  self.activeListeners.contains(listenerId) else { return }
             
             switch result {
             case .success(let message):
@@ -110,7 +125,10 @@ open class NWWebSocket: WebSocketConnection {
                 @unknown default:
                     break
                 }
-                self.listen()
+                
+                if self.isConnected && self.activeListeners.contains(listenerId) {
+                    self.listen()
+                }
                 
             case .failure(let error):
                 self.delegate?.webSocketDidReceiveError(connection: self, error: error)
@@ -147,18 +165,26 @@ open class NWWebSocket: WebSocketConnection {
     /// Disconnect from the WebSocket.
     /// - Parameter closeCode: The code to use when closing the WebSocket connection.
     open func disconnect(closeCode: URLSessionWebSocketTask.CloseCode = .normalClosure) {
+        guard isConnected || webSocketTask != nil else { return }
+        
         isIntentionalDisconnection = true
+        isConnected = false
+        
+        activeListeners.removeAll()
+        
         pingTimer?.invalidate()
+        pingTimer = nil
         
         webSocketTask?.cancel(with: closeCode, reason: nil)
         webSocketTask = nil
         
-        delegate?.webSocketDidDisconnect(connection: self, 
-                                       closeCode: closeCode,
-                                       reason: nil)
+        connectionQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.delegate?.webSocketDidDisconnect(connection: self, 
+                                                closeCode: closeCode,
+                                                reason: nil)
+            self.isIntentionalDisconnection = false
+        }
     }
-
-    // MARK: - Private methods
-
 }
 
