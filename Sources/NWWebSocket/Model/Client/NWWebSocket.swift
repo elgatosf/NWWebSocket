@@ -18,7 +18,7 @@ open class NWWebSocket: WebSocketConnection {
     private var isConnected = false
     private var isIntentionalDisconnection = false
     private var errorWhileWaitingCount = 0
-    private let errorWhileWaitingLimit = 3
+    private let errorWhileWaitingLimit = 20
     private var disconnectionWorkItem: DispatchWorkItem?
 
     // MARK: - Initialization
@@ -30,11 +30,13 @@ open class NWWebSocket: WebSocketConnection {
     ///                           The default value is `false`.
     ///   - connectionQueue: A `DispatchQueue` on which to deliver all connection events. The default value is `.main`.
     public convenience init(request: URLRequest,
-                          connectAutomatically: Bool = false,
-                          connectionQueue: DispatchQueue = .main) {
+                            options: URLSessionConfiguration = .default,
+                            connectAutomatically: Bool = false,
+                            connectionQueue: DispatchQueue = .main) {
         self.init(url: request.url!,
-                 connectAutomatically: connectAutomatically,
-                 connectionQueue: connectionQueue)
+                  options: options,
+                  connectAutomatically: connectAutomatically,
+                  connectionQueue: connectionQueue)
     }
 
     /// Creates a `NWWebSocket` instance which connects to a socket `url`.
@@ -44,11 +46,12 @@ open class NWWebSocket: WebSocketConnection {
     ///                           The default value is `false`.
     ///   - connectionQueue: A `DispatchQueue` on which to deliver all connection events. The default value is `.main`.
     public init(url: URL,
-               connectAutomatically: Bool = false,
-               connectionQueue: DispatchQueue = .main) {
+                options: URLSessionConfiguration,
+                connectAutomatically: Bool = false,
+                connectionQueue: DispatchQueue = .main) {
         self.url = url
         self.connectionQueue = connectionQueue
-        self.session = URLSession(configuration: .default)
+        self.session = URLSession(configuration: options)
         
         if connectAutomatically {
             connect()
