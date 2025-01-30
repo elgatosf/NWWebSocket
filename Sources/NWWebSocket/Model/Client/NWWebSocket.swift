@@ -32,10 +32,12 @@ open class NWWebSocket: WebSocketConnection {
     ///   - connectionQueue: A `DispatchQueue` on which to deliver all connection events. The default value is `.main`.
     public convenience init(request: URLRequest,
                             options: URLSessionConfiguration = .default,
+                            delegate: (any URLSessionDelegate)? = nil,
                             connectAutomatically: Bool = false,
                             connectionQueue: DispatchQueue = .main) {
         self.init(url: request.url!,
                   options: options,
+                  delegate: delegate,
                   connectAutomatically: connectAutomatically,
                   connectionQueue: connectionQueue)
     }
@@ -48,12 +50,13 @@ open class NWWebSocket: WebSocketConnection {
     ///   - connectionQueue: A `DispatchQueue` on which to deliver all connection events. The default value is `.main`.
     public init(url: URL,
                 options: URLSessionConfiguration,
+                delegate: (any URLSessionDelegate)? = nil,
                 connectAutomatically: Bool = false,
                 connectionQueue: DispatchQueue = .main) {
         self.url = url
         self.connectionQueue = connectionQueue
-        self.session = URLSession(configuration: options)
-        
+        self.session = URLSession(configuration: options, delegate: delegate, delegateQueue: nil)
+
         if connectAutomatically {
             connect()
         }
