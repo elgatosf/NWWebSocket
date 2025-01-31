@@ -35,7 +35,11 @@ open class NWWebSocket: WebSocketConnection {
                             delegate: (any URLSessionDelegate)? = nil,
                             connectAutomatically: Bool = false,
                             connectionQueue: DispatchQueue = .main) {
-        self.init(url: request.url!,
+        guard let url = request.url else {
+            fatalError("request has no url")
+        }
+
+        self.init(url: url,
                   options: options,
                   delegate: delegate,
                   connectAutomatically: connectAutomatically,
@@ -89,9 +93,12 @@ open class NWWebSocket: WebSocketConnection {
     open func send(string: String) {
         let message = URLSessionWebSocketTask.Message.string(string)
         webSocketTask?.send(message) { [weak self] error in
-            if let error = error {
-                self?.delegate?.webSocketDidReceiveError(connection: self!, error: error)
+            guard let strongSelf = self,
+                  let error = error else {
+                return
             }
+
+            self?.delegate?.webSocketDidReceiveError(connection: strongSelf, error: error)
         }
     }
 
@@ -100,9 +107,12 @@ open class NWWebSocket: WebSocketConnection {
     open func send(data: Data) {
         let message = URLSessionWebSocketTask.Message.data(data)
         webSocketTask?.send(message) { [weak self] error in
-            if let error = error {
-                self?.delegate?.webSocketDidReceiveError(connection: self!, error: error)
+            guard let strongSelf = self,
+                  let error = error else {
+                return
             }
+
+            self?.delegate?.webSocketDidReceiveError(connection: strongSelf, error: error)
         }
     }
 
